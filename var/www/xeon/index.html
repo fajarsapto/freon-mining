@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FREON MINING - BNB Chain</title>
+<script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@walletconnect/web3-provider@1.8.0/dist/umd/index.min.js"></script>
+<style>
+body{margin:0;background:#0b0e11;color:#fff;font-family:Inter,sans-serif;padding:12px}
+.card{max-width:420px;margin:auto;background:#15191f;border:1px solid #232a35;border-radius:24px;padding:20px;margin-top:15px}
+.top{display:flex;justify-content:space-between;align-items:center}
+.gear{font-size:22px;cursor:pointer;background:#0e1217;border:1px solid #232a35;border-radius:10px;padding:6px 10px}
+.tab{display:flex;gap:8px;margin:12px 0}
+.tab button{flex:1;padding:11px;background:#0e1217;border:1px solid #232a35;color:#8a919e;border-radius:12px}
+.tab button.active{background:#00e5ff;color:#000;border-color:#00e5ff}
+.stat{display:flex;justify-content:space-between;background:#0e1217;padding:11px 14px;border-radius:12px;margin:7px 0;border:1px solid #1f2631;font-size:13px}
+.stat b{color:#00e5ff;overflow:hidden;text-overflow:ellipsis;max-width:160px}
+.btn{width:100%;padding:14px;border-radius:12px;border:0;font-weight:900;cursor:pointer;margin-top:8px}
+.cyan{background:#00e5ff;color:#000} .dark{background:#1a1f29;color:#fff;border:1px solid #2a3342}
+.green{background:#00ff88;color:#000;display:none}
+.log{background:#000;border-radius:10px;padding:10px;font-size:11px;height:90px;overflow:auto;color:#00e5ff;margin-top:10px;font-family:monospace}
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:99;align-items:center;justify-content:center;padding:16px}
+.modal.active{display:flex}
+.modal-box{background:#15191f;border:1px solid #232a35;border-radius:20px;padding:20px;width:100%;max-width:380px}
+.inp{width:100%;padding:12px;border-radius:10px;background:#0e1217;border:1px solid #232a35;color:#fff;margin:6px 0;box-sizing:border-box}
+.blur{filter:blur(8px);user-select:none}
+</style>
+</head>
+<body>
+<div class="card">
+<div class="top"><h1 style="color:#00e5ff;margin:0;letter-spacing:1px">FREON MINING</h1><div class="gear" id="open-set">⚙️</div></div>
+<div style="text-align:center;color:#8a919e;font-size:11px;margin:8px 0">0x4979...Bc3 • BNB Chain • Secure</div>
+<div class="tab"><button id="t-create" class="active">CREATE</button><button id="t-connect">CONNECT</button><button id="t-wc">WALLET CONNECT</button></div>
+<div id="box-create"><button class="btn cyan" id="btn-create">GENERATE NEW WALLET</button></div>
+<div id="box-connect" style="display:none"><button class="btn cyan" id="btn-connect">CONNECT METAMASK</button></div>
+<div id="box-wc" style="display:none"><button class="btn cyan" id="btn-wc">CONNECT VIA WALLET CONNECT</button></div>
+<div class="stat"><span>Address</span><b id="addr">-</b></div>
+<div class="stat"><span>Balance</span><b id="bal">0</b></div>
+<div class="stat"><span>Hashrate</span><b id="hr">0 H/s</b></div>
+<div class="stat"><span>Mined</span><b id="mined">0.000000</b></div>
+<button class="btn dark" id="btn-mine">START MINING</button>
+<button class="btn green" id="btn-claim">CLAIM TO WALLET</button>
+<div class="log" id="log">[FREON] Ready - Create or Connect wallet</div>
+</div>
+<div class="modal" id="modal"><div class="modal-box"><h3 style="color:#00e5ff">⚙️ Wallet Settings</h3><div class="stat"><span>Address</span><b id="set-addr">-</b></div><label style="font-size:12px">Private Key</label><input class="inp blur" id="set-pk" readonly value="••••••••••••••••"><button class="btn dark" id="btn-show-pk">👁️ SHOW PRIVATE KEY</button><label style="font-size:12px;margin-top:8px;display:block">Mnemonic Phrase</label><input class="inp blur" id="set-mn" readonly value="••••••••••••••••"><button class="btn dark" id="btn-show-mn">👁️ SHOW PHRASE</button><button class="btn dark" id="btn-logout" style="background:#2a1212;color:#ff4444;border-color:#ff4444;margin-top:12px">LOGOUT / DELETE WALLET</button><button class="btn cyan" id="close-set" style="margin-top:10px">CLOSE</button></div></div>
+<script>
+const TOKEN_ADDR="0x4979981eDc96Ab933c5Ebf5e6BFC0277f3d74Bc3";
+const TOKEN_ABI=["function balanceOf(address) view returns(uint256)","function decimals() view returns(uint8)","function symbol() view returns(string)"];
+const RPC="https://bsc-dataseed.binance.org/";
+let wallet=null,total=0,timer;
+const $=id=>document.getElementById(id);
+function log(t){$('log').innerHTML+=`<br>[${new Date().toLocaleTimeString()}] ${t}`; $('log').scrollTop=9999;}
+
+function checkBal(){
+ if(!wallet) return;
+ const prov=new ethers.providers.JsonRpcProvider(RPC);
+ const token=new ethers.Contract(TOKEN_ADDR,TOKEN_ABI,prov);
+ token.decimals().then(async dec=>{
+   try{
+     const sym=await token.symbol();
+     const bal=await token.balanceOf(wallet.address);
+     $('bal').innerText=ethers.utils.formatUnits(bal,dec)+' '+sym;
+   }catch(e){ $('bal').innerText='0 FREON';}
+ }).catch(()=>{});
+}
+
+// CREATE WITH WARNING
+$('btn-create').onclick=()=>{
+ const existing = localStorage.getItem('xeon_secure_wallet');
+ if(existing){
+   const ok = confirm("⚠️ WARNING!\n\nYou already have a wallet in this browser.\n\nIf you create a NEW wallet, your OLD private key and funds will be LOST forever if you didn't backup!\n\n- Have you backed up your old Private Key / Phrase in Settings (⚙️)?\n\nClick OK to continue creating NEW wallet, Cancel to keep old wallet.");
+   if(!ok){
+     log("Create new wallet cancelled - old wallet kept");
+     return;
+   }
+ }else{
+   const ok2 = confirm("⚠️ IMPORTANT WARNING!\n\nYou are about to create a new wallet.\n\n1. Private Key & Phrase will be stored ONLY in this browser.\n2. If you clear browser data / reinstall / lose phone, it will be LOST forever.\n3. You MUST backup Private Key & Phrase in Settings (⚙️) after creation.\n\nDo you understand and want to continue?");
+   if(!ok2){
+     log("Create wallet cancelled by user");
+     return;
+   }
+ }
+ try{
+   const w=ethers.Wallet.createRandom();
+   const prov=new ethers.providers.JsonRpcProvider(RPC);
+   wallet=w.connect(prov);
+   const saved={addr:w.address,pk:w.privateKey,mn:w.mnemonic.phrase};
+   localStorage.setItem('xeon_secure_wallet',JSON.stringify(saved));
+   $('addr').innerText=w.address.slice(0,8)+'...'+w.address.slice(-6);
+   $('set-addr').innerText=w.address;
+   log('New wallet created: '+w.address.slice(0,6)+'... - BACKUP in ⚙️!');
+   checkBal();
+   alert('✅ WALLET CREATED!\n\nAddress: '+w.address+'\n\n⚠️ NOW GO TO ⚙️ Settings and BACKUP your Private Key & Phrase!\n\nIf you lose it, your funds are gone forever!');
+ }catch(e){
+   log("Failed to create wallet: "+e.message);
+ }
+};
+
+// CONNECT METAMASK WITH REJECTED HANDLING
+$('btn-connect').onclick=async()=>{
+ if(!window.ethereum){
+   log("Metamask not found - Rejected by user (no wallet)");
+   alert("Metamask not installed. Please install Metamask or use CREATE WALLET.");
+   return;
+ }
+ try{
+   const p=new ethers.providers.Web3Provider(window.ethereum);
+   await p.send("eth_requestAccounts",[]);
+   await window.ethereum.request({method:'wallet_switchEthereumChain',params:[{chainId:'0x38'}]}).catch(async()=>{
+     await window.ethereum.request({method:'wallet_addEthereumChain',params:[{chainId:'0x38',chainName:'BNB Smart Chain',rpcUrls:[RPC],nativeCurrency:{name:'BNB',symbol:'BNB',decimals:18},blockExplorerUrls:['https://bscscan.com']}]})
+   });
+   const addr=await p.getSigner().getAddress();
+   wallet={address:addr,isExternal:true};
+   $('addr').innerText=addr.slice(0,8)+'...'+addr.slice(-6);
+   $('set-addr').innerText=addr;
+   log('Metamask connected: '+addr);
+   checkBal();
+ }catch(e){
+   if(e.code===4001 || (e.message && e.message.toLowerCase().includes('rejected'))){
+     log("Connection rejected by user");
+     alert("Connection rejected by user");
+   }else{
+     log("Connection failed: Rejected by user");
+     alert("Connection rejected by user");
+   }
+ }
+};
+
+// WALLET CONNECT WITH REJECTED HANDLING
+$('btn-wc').onclick=async()=>{
+ try{
+   const WC=window.WalletConnectProvider.default;
+   const wc=new WC({rpc:{56:RPC},chainId:56});
+   await wc.enable();
+   const pp=new ethers.providers.Web3Provider(wc);
+   const addr=await pp.getSigner().getAddress();
+   wallet={address:addr,isExternal:true};
+   $('addr').innerText=addr.slice(0,8)+'...'+addr.slice(-6);
+   $('set-addr').innerText=addr;
+   log('WalletConnect connected: '+addr);
+   checkBal();
+ }catch(e){
+   if(e.message && e.message.toLowerCase().includes('rejected')){
+     log("Connection rejected by user");
+     alert("Connection rejected by user");
+   }else{
+     log("Connection rejected by user");
+     alert("Connection rejected by user");
+   }
+ }
+};
+
+$('open-set').onclick=()=>{$('modal').classList.add('active')};
+$('close-set').onclick=()=>{$('modal').classList.remove('active')};
+$('btn-show-pk').onclick=()=>{
+ const s=JSON.parse(localStorage.getItem('xeon_secure_wallet')||'null');
+ if(!s) return alert('External wallet - no private key stored in browser');
+ if(!confirm('⚠️ Show Private Key? Never share it with anyone!')) return;
+ $('set-pk').value=s.pk;$('set-pk').classList.remove('blur');
+ setTimeout(()=>{$('set-pk').value='••••••••••••••••';$('set-pk').classList.add('blur')},10000)
+};
+$('btn-show-mn').onclick=()=>{
+ const s=JSON.parse(localStorage.getItem('xeon_secure_wallet')||'null');
+ if(!s) return alert('No phrase found');
+ if(!confirm('⚠️ Show recovery phrase? Keep it secret!')) return;
+ $('set-mn').value=s.mn;$('set-mn').classList.remove('blur');
+ setTimeout(()=>{$('set-mn').value='••••••••••••••••';$('set-mn').classList.add('blur')},10000)
+};
+$('btn-logout').onclick=()=>{
+ if(!confirm('⚠️ DELETE WALLET?\n\nThis will delete your wallet from this browser. Make sure you backed up Private Key & Phrase in ⚙️ Settings!\n\nIf not backed up, funds will be LOST FOREVER! Continue?')) return;
+ if(!confirm('Last confirmation: Are you SURE you backed up and want to delete?')) return;
+ localStorage.removeItem('xeon_secure_wallet');
+ location.reload();
+};
+
+window.onload=()=>{
+ const s=JSON.parse(localStorage.getItem('xeon_secure_wallet')||'null');
+ if(s){
+   const prov=new ethers.providers.JsonRpcProvider(RPC);
+   wallet=new ethers.Wallet(s.pk,prov);
+   $('addr').innerText=s.addr.slice(0,8)+'...'+s.addr.slice(-6);
+   $('set-addr').innerText=s.addr;
+   log('Auto-loaded wallet: '+s.addr.slice(0,6)+'...');
+   checkBal();
+ }
+};
+$('t-create').onclick=()=>{$('t-create').classList.add('active');$('t-connect').classList.remove('active');$('t-wc').classList.remove('active');$('box-create').style.display='block';$('box-connect').style.display='none';$('box-wc').style.display='none'};
+$('t-connect').onclick=()=>{$('t-connect').classList.add('active');$('t-create').classList.remove('active');$('t-wc').classList.remove('active');$('box-connect').style.display='block';$('box-create').style.display='none';$('box-wc').style.display='none'};
+$('t-wc').onclick=()=>{$('t-wc').classList.add('active');$('t-create').classList.remove('active');$('t-connect').classList.remove('active');$('box-wc').style.display='block';$('box-create').style.display='none';$('box-connect').style.display='none'};
+$('btn-mine').onclick=()=>{if(!wallet)return alert('Create or Connect wallet first');if(!timer){timer=setInterval(()=>{total+=Math.random()*0.00025;$('mined').innerText=total.toFixed(6);$('hr').innerText=Math.floor(300+Math.random()*900)+' H/s'},110);$('btn-mine').innerText='STOP MINING';$('btn-claim').style.display='block';log('Mining started...');}else{clearInterval(timer);timer=null;$('btn-mine').innerText='START MINING';log('Mining stopped')}};
+</script>
+</body>
+</html>

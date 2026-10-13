@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FREON MINING</title>
+<script src="https://cdn.jsdelivr.net/npm/ethers@6.10.0/dist/ethers.umd.min.js"></script>
+<script src="https://unpkg.com/@walletconnect/ethereum-provider@2.13.0/dist/umd/index.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:monospace}
+body{background:#0a0e14;color:#fff;min-height:100vh;display:flex;justify-content:center;padding:10px}
+.card{background:#131a23;border:2px solid #1e2a38;border-radius:22px;padding:18px;width:100%;max-width:400px}
+h1{color:#00e5ff;text-align:center;font-size:30px;font-weight:900}
+.topaddr{text-align:center;margin:6px 0 14px}
+.topaddr a{color:#8a9aae;font-size:11px;text-decoration:none}
+.topaddr a:hover{color:#00e5ff;text-decoration:underline}
+.tabs{display:flex;gap:6px;margin-bottom:10px}
+.tab{flex:1;background:#0e141d;border:1px solid #1e2a38;border-radius:10px;padding:8px;text-align:center;font-size:11px;color:#8a9aae;cursor:pointer}
+.tab.active{background:#00e5ff;color:#000;font-weight:800}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px}
+.btn-small{background:#1a2532;border:1px solid #2a3a4e;color:#8a9aae;border-radius:12px;padding:12px 4px;font-weight:700;font-size:11px;cursor:pointer}
+.btn-small.active{background:#00e5ff;color:#000;border-color:#00e5ff}
+.btn-big{width:100%;background:#00e5ff;color:#000;border:none;border-radius:14px;padding:14px;font-weight:900;font-size:14px;cursor:pointer;margin-bottom:10px}
+.field{background:#0e141d;border:1px solid #1e2a38;border-radius:12px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.field label{color:#8a9aae;font-size:12px}
+.field div{color:#00e5ff;font-weight:700;font-size:12px}
+.field a{color:#00e5ff;text-decoration:none}
+.btn-start{width:100%;background:#1a2532;border:1px solid #2a3a4e;color:#fff;border-radius:14px;padding:14px;font-weight:800;margin-bottom:10px;cursor:pointer}
+.btn-claim{width:100%;background:#00ff88;color:#000;border:none;border-radius:14px;padding:14px;font-weight:900;cursor:pointer;margin-bottom:12px}
+.console{background:#000;border-radius:12px;padding:10px;font-size:11px;color:#00e5ff;line-height:1.6;min-height:70px;border:1px solid #1a2a1e;overflow:auto}
+.rateGrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:10px}
+.rate{background:#0e141d;border:1px solid #1e2a38;border-radius:10px;padding:8px;text-align:center}
+.rate label{font-size:8px;color:#8a9aae;display:block}
+.rate div{color:#00e5ff;font-weight:800;font-size:12px;margin-top:3px}
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>FREON MINING</h1>
+  <div class="topaddr">
+    <a href="https://bscscan.com/address/0x4979981eDc96Ab933c5Ebf5e6BFC0277f3d74Bc3" target="_blank">Token 0x4979...Bc3</a> •
+    <a href="https://bscscan.com/address/0x1D20ed8D8c572FB7C2e85A6366526300e69aF93c" target="_blank">Mining 0x1D20...F93c</a>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" id="tabMining" onclick="switchTab('mining')">⛏️ MINING</div>
+    <div class="tab" id="tabBal" onclick="switchTab('balance')">💰 BALANCE</div>
+  </div>
+
+  <div id="view-mining">
+    <div class="row3">
+      <button class="btn-small active">CREATE</button>
+      <button class="btn-small" onclick="connectInjected()">CONNECT</button>
+      <button class="btn-small" onclick="connectWC()">WALLET CONNECT V2</button>
+    </div>
+    <button class="btn-big" onclick="connectInjected()">CONNECT WALLET</button>
+
+    <div class="field"><label>Address</label><div><a href="#" id="addrLink" target="_blank"><span id="addr">-</span></a></div></div>
+    <div class="field"><label>Balance</label><div><span id="frnBal">-</span> | <span id="bnbBal">-</span></div></div>
+
+    <div class="rateGrid">
+      <div class="rate"><label>REWARD / MENIT</label><div id="perMin">-</div></div>
+      <div class="rate"><label>REWARD / JAM</label><div id="perHour">-</div></div>
+      <div class="rate"><label>REWARD / HARI</label><div id="perDay">-</div></div>
+    </div>
+
+    <div class="field"><label>Mined Pending</label><div id="mined">0.000000 FRN</div></div>
+
+    <button class="btn-start" id="btnStart" onclick="startMining()" disabled>START MINING (0.0014 BNB)</button>
+    <button class="btn-claim" id="btnClaim" onclick="claim()" disabled>CLAIM TO WALLET</button>
+  </div>
+
+  <div id="view-balance" style="display:none">
+    <div class="field"><label>BNB Balance</label><div id="bnbBal2">-</div></div>
+    <div class="field"><label>FRN Balance</label><div id="frnBal2">-</div></div>
+    <div class="field"><label>Pending</label><div id="pendBal">0.000000</div></div>
+    <div class="field"><label>Faucet SC</label><div id="faucetBal">-</div></div>
+    <button class="btn-big" onclick="loadAll()">🔄 REFRESH</button>
+  </div>
+
+  <div class="console" id="console">[FREON] V2 Ready<br>[INFO] Gunakan CONNECT jika di Metamask/Trust Browser<br>[INFO] Gunakan WALLET CONNECT V2 jika dari browser biasa</div>
+</div>
+
+<script>
+const MINING_ADDRESS = "0x1D20ed8D8c572FB7C2e85A6366526300e69aF93c";
+const FREON_ADDRESS = "0x4979981eDc96Ab933c5Ebf5e6BFC0277f3d74Bc3";
+const ABI = ["function startFee() view returns (uint256)","function dailyReward() view returns (uint256)","function isMining(address) view returns (bool)","function getPending(address) view returns (uint256)","function startMining() payable","function claim()","function getInfo(address) view returns (bool,uint256,uint256,uint256)"];
+const ERC20_ABI = ["function balanceOf(address) view returns (uint256)"];
+let provider, signer, contract, token, userAddress, timer, perSec=0;
+let wcProvider = null;
+
+// PROJECT ID GRATIS dari walletconnect cloud - ganti kalau lu punya sendiri
+const WC_PROJECT_ID = "a2e9d3e8f1c4b6d9a0e1f2c3d4b5a6c7";
+
+function log(m){ const c=document.getElementById("console"); c.innerHTML+=`<br>[${new Date().toLocaleTimeString().slice(0,8)}] ${m}`; c.scrollTop=9999; }
+function switchTab(t){
+  if(t==='mining'){ document.getElementById("tabMining").classList.add("active"); document.getElementById("tabBal").classList.remove("active"); document.getElementById("view-mining").style.display="block"; document.getElementById("view-balance").style.display="none"; }
+  else { document.getElementById("tabBal").classList.add("active"); document.getElementById("tabMining").classList.remove("active"); document.getElementById("view-mining").style.display="none"; document.getElementById("view-balance").style.display="block"; loadAll(); }
+}
+
+async function connectInjected(){
+  try{
+    if(!window.ethereum){ log("Tidak ada window.ethereum, coba WalletConnect V2"); return connectWC(); }
+    log("Connecting injected...");
+    provider = new ethers.BrowserProvider(window.ethereum);
+    await provider.send("eth_requestAccounts", []);
+    const net = await provider.getNetwork();
+    if(net.chainId!==56n){ await window.ethereum.request({method:'wallet_switchEthereumChain', params:[{chainId:'0x38'}]}); }
+    signer = await provider.getSigner();
+    userAddress = await signer.getAddress();
+    contract = new ethers.Contract(MINING_ADDRESS, ABI, signer);
+    token = new ethers.Contract(FREON_ADDRESS, ERC20_ABI, provider);
+    document.getElementById("addr").innerText = userAddress.slice(0,6)+"..."+userAddress.slice(-4);
+    document.getElementById("addrLink").href = "https://bscscan.com/address/"+userAddress;
+    log("Connected: "+userAddress.slice(0,12)+"...");
+    loadAll();
+  }catch(e){ log("Injected failed: "+e.message); }
+}
+
+async function connectWC(){
+  try{
+    log("Init WalletConnect V2...");
+    const WCProvider = window.EthereumProvider;
+    wcProvider = await WCProvider.init({
+      projectId: WC_PROJECT_ID,
+      chains: [56],
+      showQrModal: true,
+      metadata: { name:"FREON Mining", description:"FREON Mining xeon-s.my.id", url:"https://xeon-s.my.id", icons:["https://xeon-s.my.id/favicon.ico"] }
+    });
+    await wcProvider.connect();
+    provider = new ethers.BrowserProvider(wcProvider);
+    signer = await provider.getSigner();
+    userAddress = await signer.getAddress();
+    contract = new ethers.Contract(MINING_ADDRESS, ABI, signer);
+    token = new ethers.Contract(FREON_ADDRESS, ERC20_ABI, provider);
+    document.getElementById("addr").innerText = userAddress.slice(0,6)+"..."+userAddress.slice(-4);
+    document.getElementById("addrLink").href = "https://bscscan.com/address/"+userAddress;
+    log("WC V2 Connected: "+userAddress.slice(0,12));
+    loadAll();
+  }catch(e){ log("WC V2 Error: "+e.message); alert("WalletConnect gagal, coba buka xeon-s.my.id di dalam browser Trust Wallet / Metamask App, jangan di Chrome biasa"); }
+}
+
+async function loadAll(){
+  if(!contract ||!userAddress) return;
+  try{
+    const bnb = await provider.getBalance(userAddress);
+    const frn = await token.balanceOf(userAddress);
+    const faucet = await token.balanceOf(MINING_ADDRESS);
+    document.getElementById("bnbBal").innerText = (Number(bnb)/1e18).toFixed(5)+" BNB";
+    document.getElementById("bnbBal2").innerText = (Number(bnb)/1e18).toFixed(5)+" BNB";
+    document.getElementById("frnBal").innerText = (Number(frn)/1e18).toFixed(4)+" FRN";
+    document.getElementById("frnBal2").innerText = (Number(frn)/1e18).toFixed(4)+" FRN";
+    document.getElementById("faucetBal").innerText = (Number(faucet)/1e18).toFixed(2)+" FRN";
+
+    const info = await contract.getInfo(userAddress);
+    const fee = await contract.startFee();
+    const perDay = Number(info[3])/1e18; const perHour = perDay/24; const perMin = Number(info[2])/1e18;
+    perSec = perDay/86400;
+    document.getElementById("perDay").innerText = perDay.toFixed(2);
+    document.getElementById("perHour").innerText = perHour.toFixed(6);
+    document.getElementById("perMin").innerText = perMin.toFixed(6);
+    document.getElementById("btnStart").innerText = `START MINING (${(Number(fee)/1e18).toFixed(4)} BNB)`;
+    document.getElementById("btnStart").disabled = false;
+    document.getElementById("btnClaim").disabled = false;
+
+    let pending = Number(info[1])/1e18;
+    document.getElementById("mined").innerText = pending.toFixed(6)+" FRN";
+    document.getElementById("pendBal").innerText = pending.toFixed(6)+" FRN";
+
+    if(info[0]){
+      document.getElementById("btnStart").innerText = "MINING AKTIF "+perMin.toFixed(6)+"/min";
+      if(timer) clearInterval(timer);
+      timer=setInterval(()=>{ pending+=perSec; document.getElementById("mined").innerText=pending.toFixed(6)+" FRN"; document.getElementById("pendBal").innerText=pending.toFixed(6)+" FRN"; },1000);
+    }
+  }catch(e){ log("Load error: "+e.message); }
+}
+async function startMining(){
+  try{
+    const fee = await contract.startFee();
+    log("Paying fee..."); const tx = await contract.startMining({value: fee}); await tx.wait(); log("Mining started!"); loadAll();
+  }catch(e){ log("Start fail: "+(e.reason||e.message)); }
+}
+async function claim(){
+  try{
+    log("Claiming..."); const tx = await contract.claim(); await tx.wait(); log("Claim OK!"); loadAll();
+  }catch(e){ log("Claim fail: "+(e.reason||e.message)); }
+}
+</script>
+</body>
+</html>

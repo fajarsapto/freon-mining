@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#07111f">
+<title>FREON MINING</title>
+<script src="https://cdn.jsdelivr.net/npm/ethers@6.13.5/dist/ethers.umd.min.js"></script>
+<style>
+:root{color-scheme:dark;--bg:#07111f;--panel:#101d30;--line:#243750;--text:#edf5ff;--muted:#9aadc5;--cyan:#4de2d0;--blue:#5c8dff;--danger:#ff7777;--gold:#f5c518}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#102b43 0,#07111f 55%);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:var(--text);min-height:100vh}
+header{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:18px max(18px,calc((100% - 1080px)/2));border-bottom:1px solid #20324a;background:#07111fe8;position:sticky;top:0;z-index:5;backdrop-filter:blur(12px)}
+.brand{font-weight:900;letter-spacing:2px;font-size:19px}.brand span{color:var(--cyan)}button,.btn{border:0;border-radius:11px;padding:12px 16px;font-weight:750;cursor:pointer;color:#06151d;background:var(--cyan);text-decoration:none;display:inline-flex;justify-content:center;align-items:center;gap:8px}button.secondary,.btn.secondary{background:#1b2b42;color:var(--text);border:1px solid #314760}button.gold{background:var(--gold);color:#121316}button.danger{background:#4a202b;color:#ffdce0;border:1px solid #85404b}button:disabled{opacity:.45;cursor:not-allowed}
+main{max-width:1080px;margin:auto;padding:28px 18px 60px}.hero{text-align:center;padding:42px 12px 30px}.eyebrow{color:var(--cyan);font-size:12px;letter-spacing:3px;font-weight:800}.hero h1{font-size:clamp(32px,7vw,58px);margin:13px 0;background:linear-gradient(90deg,#fff,var(--cyan));color:transparent;background-clip:text}.hero p{max-width:660px;margin:0 auto 24px;color:var(--muted);line-height:1.7}.actions{display:flex;justify-content:center;gap:10px;flex-wrap:wrap}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.card{background:linear-gradient(145deg,#13243a,#0d192a);border:1px solid var(--line);border-radius:18px;padding:20px;min-width:0}.card h2,.card h3{margin:0 0 12px}.label{color:var(--muted);font-size:12px;letter-spacing:1px;text-transform:uppercase}.value{font-size:clamp(20px,3vw,28px);font-weight:850;margin:8px 0;overflow-wrap:anywhere}.small{font-size:13px;color:var(--muted);line-height:1.6}.wide{grid-column:1/-1}.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.row>*{flex:1}.status{display:inline-flex;align-items:center;gap:7px;font-size:12px;color:var(--muted)}input{width:100%;background:#081322;color:var(--text);border:1px solid #314760;border-radius:10px;padding:13px;margin:7px 0 12px;font:inherit}label{font-size:13px;color:#c3d2e5}section{margin-top:18px}.hidden{display:none!important}.notice{padding:13px 15px;border-radius:12px;background:#2a2416;border:1px solid #66552b;color:#f5dda0;font-size:13px;line-height:1.6}.address{overflow-wrap:anywhere;font-family:ui-monospace,monospace;font-size:12px;color:#b5c9e2}.footer{text-align:center;color:#7187a2;font-size:12px;padding:28px 10px 0}dialog{width:min(520px,calc(100% - 24px));border:1px solid #35506b;border-radius:18px;background:#0d1a2b;color:var(--text);padding:22px;box-shadow:0 25px 80px #0009}dialog::backdrop{background:#020711c9}dialog h2{margin-top:0}.dialog-actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:8px}.dialog-actions button{flex:1}
+.owner-card{background:linear-gradient(145deg,#2b210d,#1a1408);border:1px solid #7d611d;box-shadow:0 10px 30px rgba(245,197,24,.1)}.owner-title{color:var(--gold);display:flex;align-items:center;gap:8px;margin-top:0}.owner-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:14px}.owner-box{background:#141006;border:1px solid #4a3a14;border-radius:12px;padding:14px}
+#connectWalletModal{width:min(420px,calc(100% - 32px));border:1px solid #20242a;border-radius:24px;background:#121316;color:#fff;padding:22px 20px;box-shadow:0 20px 60px #000d}.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}.modal-header h3{margin:0 auto;font-size:18px}.modal-btn-icon{background:#1e2025;color:#fff;width:32px;height:32px;border-radius:50%;padding:0}.wallet-list{display:flex;flex-direction:column;gap:9px}.wallet-item{display:flex;align-items:center;justify-content:space-between;background:#1a1b1f;border:1px solid #25272d;border-radius:15px;padding:12px 14px;cursor:pointer;width:100%;color:white}.wallet-item:hover{background:#23252b;border-color:#383b45}.wallet-info{display:flex;align-items:center;gap:12px}.wallet-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:20px}.wallet-icon.official-wallet-icon img{width:29px;height:29px;object-fit:contain;display:block}.warning-marquee{overflow:hidden;white-space:nowrap;background:#3a2115;border-bottom:1px solid #9b572a;color:#ffd4a8;font-size:13px;font-weight:750;padding:10px 0}.warning-marquee span{display:inline-block;padding-left:100%;animation:warningScroll 22s linear infinite}@keyframes warningScroll{from{transform:translateX(0)}to{transform:translateX(-100%)}}.chart-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.chart-card{background:linear-gradient(145deg,#13243a,#0d192a);border:1px solid var(--line);border-radius:18px;padding:20px;min-width:0}.chart-card svg{width:100%;height:180px;display:block}.chart-value{font-size:24px;font-weight:850;margin:8px 0}.chart-note{font-size:12px;color:var(--muted);line-height:1.5}@media(max-width:720px){.chart-grid{grid-template-columns:1fr}}.wallet-name{font-size:15px;font-weight:650}.badge-count{background:#252830;color:#aab3c0;font-size:11px;font-weight:700;padding:4px 7px;border-radius:6px}.modal-footer{text-align:center;margin-top:18px;font-size:13px;color:#a0a7b1}.modal-footer a{color:#7da4ff;text-decoration:none;font-weight:600}.wallet-help{font-size:12px;color:#aab3c0;line-height:1.5;margin:14px 2px 0}
+#appToast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,20px);width:min(560px,calc(100% - 28px));z-index:9999;background:#12243a;border:1px solid #36516f;border-radius:14px;padding:14px 16px;box-shadow:0 12px 40px #0009;color:var(--text);font-size:14px;line-height:1.55;opacity:0;pointer-events:none;transition:opacity .2s ease,transform .2s ease}#appToast.show{opacity:1;transform:translate(-50%,0);pointer-events:auto}#appToast.success{border-color:#278d75}#appToast.error{border-color:#b84a58}#appToast a{color:var(--cyan);font-weight:750;overflow-wrap:anywhere}
+@media(max-width:720px){.grid{grid-template-columns:1fr}.wide{grid-column:auto}header{padding:14px 16px}.hero{padding-top:30px}.card{padding:17px}}
+</style>
+</head>
+<body>
+<div id="appToast" role="status" aria-live="polite"></div>
+<header><div class="brand">FREON <span>MINING</span></div><button class="secondary" id="settingsBtn">Settings</button></header>
+<div class="warning-marquee" role="status" aria-label="Wallet safety warning"><span>Warning: If you create a wallet, always make sure to export your private key via settings ⚙️</span></div>
+<main>
+<div id="welcome" class="hero">
+<div class="eyebrow">BNB SMART CHAIN · MAINNET</div><h1>FREON MINING</h1>
+<p>One click to start mining and enjoy forever. Mining statistics will be refreshed every 5 minutes.</p>
+<div class="actions"><button id="connectExtBtn">Connect Wallet</button><button class="secondary" id="createBtn">Create Local Wallet</button></div>
+<p class="small" style="margin-top:16px">Connect a compatible EVM wallet or store an encrypted wallet in this browser.</p>
+</div>
+<section id="walletPanel" class="card hidden"><div class="row"><div><div class="label">Wallet status</div><div class="value" id="walletStatus">Disconnected</div><div class="address" id="walletAddress"></div></div><div style="text-align:right"><button class="secondary" id="lockBtn">Disconnect / Lock Wallet</button></div></div></section>
+<section id="ownerPanel" class="card wide owner-card hidden">
+<h3 class="owner-title">👑 Owner Admin Control Panel</h3><p class="small">Owner controls for the FRN Mining Vault on the selected network.</p>
+
+<div class="owner-grid hidden" id="vaultOwnerControls">
+<div class="owner-box"><div class="label">Mining Activation Fee (native coin)</div><input type="number" id="vaultMiningFeeInput" min="0" step="any" placeholder="0.001"><button class="gold" id="vaultSetMiningFeeBtn" style="width:100%">Update Mining Fee</button></div>
+<div class="owner-box"><div class="label">Booster Price (native coin)</div><input type="number" id="vaultBoosterPriceInput" min="0" step="any" placeholder="0.01"><button class="gold" id="vaultSetBoosterPriceBtn" style="width:100%">Update Booster Price</button></div>
+<div class="owner-box"><div class="label">Deposit FRN into vault</div><input type="number" id="vaultDepositInput" min="0" step="any" placeholder="FRN amount"><button class="gold" id="vaultDepositBtn" style="width:100%">Approve & Deposit FRN</button></div>
+<div class="owner-box"><div class="label">Withdraw collected native fees</div><input type="number" id="vaultFeesInput" min="0" step="any" placeholder="Native coin amount"><button class="danger" id="vaultFeesBtn" style="width:100%">Withdraw Fees</button></div>
+<div class="owner-box"><div class="label">Vault Accounting</div><div class="small" id="vaultAccounting">Loading vault details…</div></div>
+</div></section>
+<section class="grid">
+<div class="card"><div class="label">FRN Token Balance</div><div class="value" id="tokenBalance">—</div><div class="small">Connected wallet address</div></div>
+<div class="card"><div class="label">Pending Reward</div><div class="value" id="pendingReward">—</div><div class="small">Rewards currently pending to claim</div></div>
+ <div class="card"><div class="label">Estimated Reward</div><div class="value" id="estimatedReward">—</div></div>
+<div class="card"><div class="label">Remaining Supply</div><div class="value" id="remainingSupply">—</div><div class="small">Reported by the contract</div></div>
+<div class="card"><div class="label">Mining Status</div><div class="value" id="miningStatus">—</div><div class="label" style="margin-top:12px">My Mining Rate</div><div class="value" id="myMiningRate">—</div><div class="small" id="miningInfo">Connect a wallet to check status.</div></div>
+<div class="card"><div class="label">Activation Fee</div><div class="value" id="activationFee">—</div><div class="small">BNB, as reported by the contract</div></div>
+<div class="card"><div class="label">Network</div><div class="value" id="networkName">BNB Smart Chain</div><div class="small" id="networkChainLabel">Chain ID 56 · Mainnet</div><div class="row" style="margin-top:12px"><button type="button" class="secondary" id="switchBnbBtn">BNB Mainnet</button><button type="button" class="secondary" id="switchSepoliaBtn">Sepolia Testnet</button></div><div class="small" id="networkSwitchStatus" style="margin-top:8px">Select a network.</div></div>
+<div class="card wide"><h3>Contract Information</h3><div class="label">FRN Contract Address</div><p class="address" id="contractAddress"></p><div class="row"><a class="btn secondary" id="explorerLink" target="_blank" rel="noopener noreferrer">View on BscScan ↗</a></div><p class="small" id="lastUpdated">Not loaded yet.</p></div>
+<div class="card wide"><h3>Mining Network Statistics</h3><p class="small">Live values are read directly from the smart contract.</p><div class="grid" style="margin-bottom:14px"><div class="card"><div class="label">Basic Mining Rate</div><div class="value" id="rewardRateValue">1 FRN/day</div></div><div class="card"><div class="label">Total Miners</div><div class="value" id="totalMinersValue">Loading…</div></div></div><div class="card wide"><h3>Mining Actions</h3><p class="small">Execute actions on the deployed contract when your wallet is connected.</p><div class="row"><button id="startMiningBtn">Start Mining</button><button class="secondary" id="buyBoosterBtn">Buy 60-Day Booster</button><button class="secondary" id="claimRewardBtn">Claim Reward</button></div><div class="small" id="boosterInfo" style="margin-top:12px">Booster status will appear here.</div></div>
+</section>
+
+<section class="card"><h3>Security Notice</h3><div class="notice">Never share your password, private key, or recovery phrase. Verify the contract address and transaction details before signing. Only connect wallets you trust.</div></section>
+<div class="footer">© 2026 FREON MINING</div>
+</main>
+
+<dialog id="connectWalletModal">
+<div class="modal-header"><button class="modal-btn-icon" id="helpModalBtn">?</button><h3>Connect Wallet</h3><button class="modal-btn-icon" id="closeModalBtn">✕</button></div>
+<div class="wallet-list">
+<button class="wallet-item" id="optWalletConnect"><span class="wallet-info"><span class="wallet-icon official-wallet-icon" style="background:#3b99fc"><img src="https://cdn.simpleicons.org/walletconnect/FFFFFF" alt="WalletConnect logo" loading="lazy"></span><span class="wallet-name">WalletConnect · Other wallets</span></span><span class="badge-count">Connect</span></button>
+</div>
+<p class="wallet-help">Connect using WalletConnect with a wallet that supports BNB Smart Chain (Chain ID 56). This site must use HTTPS.</p>
+<div class="modal-footer">Need a wallet? <a href="https://ethereum.org/en/wallets/" target="_blank" rel="noopener noreferrer">Learn about wallets</a></div>
+</dialog>
+
+<dialog id="passwordDialog"><h2 id="dialogTitle">Secure your wallet</h2><p class="small" id="dialogDescription">Choose a strong password.</p><label for="passwordInput">Password</label><input id="passwordInput" type="password" autocomplete="new-password" minlength="10" placeholder="At least 10 characters"><label for="passwordConfirm">Confirm password</label><input id="passwordConfirm" type="password" autocomplete="new-password" minlength="10" placeholder="Re-enter password"><div class="notice">Use a unique password and keep a secure backup.</div><div class="dialog-actions"><button class="secondary" id="cancelDialog">Cancel</button><button id="confirmDialog">Continue</button></div></dialog>
+<dialog id="appInteractionDialog"><h2 id="interactionTitle">Confirm</h2><p class="small" id="interactionMessage"></p><input id="interactionInput" class="hidden" autocomplete="off"><div class="dialog-actions"><button class="secondary" id="interactionCancel">Cancel</button><button id="interactionAccept">Continue</button></div></dialog>
+<dialog id="settingsDialog"><h2>Wallet Settings</h2><p class="small" id="settingsState">No wallet is saved.</p><div class="dialog-actions"><button id="unlockBtn">Unlock Wallet</button><button class="secondary" id="backupBtn">Export Private Key</button></div><div id="backupOutput" class="hidden"><label>Private key — keep secret</label><input id="privateKeyOutput" readonly><button class="secondary" id="copyKeyBtn">Copy private key</button></div><hr style="border-color:#263a52;margin:20px 0"><button class="danger" id="deleteBtn">Delete Wallet From This Browser</button><p class="small">Deletion may be permanent without a backup.</p><div class="dialog-actions"><button class="secondary" id="closeSettings">Close</button></div></dialog>
+
+<script>
+(() => {
+'use strict';
+const CONTRACTS={bnb:'0x72ebee84b8F8B20c9Ca7012f56ec947ae29C4A82',sepolia:'0x47C8FF525fdF82454b1766532e078E2b568be7F0'};
+const NETWORKS={bnb:{key:'bnb',name:'BNB Smart Chain',chainId:56,hex:'0x38',chainName:'BNB Smart Chain Mainnet',currency:{name:'BNB',symbol:'BNB',decimals:18},rpc:'https://bsc-dataseed.binance.org/',fallbackRpcs:['https://bsc-rpc.publicnode.com/','https://binance.llamarpc.com'],explorer:'https://bscscan.com/',feeSymbol:'BNB',label:'Chain ID 56 · Mainnet'},sepolia:{key:'sepolia',name:'Sepolia',chainId:11155111,hex:'0xaa36a7',chainName:'Sepolia Test Network',currency:{name:'Sepolia Ether',symbol:'ETH',decimals:18},rpc:'https://ethereum-sepolia-rpc.publicnode.com/',fallbackRpcs:['https://rpc.sepolia.org/','https://1rpc.io/sepolia'],explorer:'https://sepolia.etherscan.io/',feeSymbol:'Sepolia ETH',label:'Chain ID 11155111 · Testnet'}};
+let activeNetworkKey=localStorage.getItem('freon_active_network')==='sepolia'?'sepolia':'bnb';
+let CONTRACT=CONTRACTS[activeNetworkKey];
+let activeNetwork=NETWORKS[activeNetworkKey];
+const RPC=activeNetwork.rpc;
+const STORE_KEY='freon_wallet_keystore_v1';
+// Create a Reown Project ID at https://dashboard.reown.com/ and paste it here.
+const WALLETCONNECT_PROJECT_ID='d2e7f7a06c478ef4601956b57b6a17c7';
+let walletConnectProvider=null;
+const LEGACY_ABI=[
+'event RewardDistributed(uint256 minutesPassed,uint256 totalMinted,uint256 time)','function balanceOf(address) view returns (uint256)','function pendingReward(address) view returns (uint256)','function estimateReward(address) view returns (uint256)','function remainingSupply() view returns (uint256)','function activationFee() view returns (uint256)','function rewardPerMinute() view returns (uint256)','function totalMiners() view returns (uint256)','function lastDistributionTime() view returns (uint256)','function getMiningStatus(address) view returns (bool,uint256,uint256)','function decimals() view returns (uint8)','function symbol() view returns (string)','function owner() view returns (address)','function activateMining() payable','function claimReward()','function distributeReward()','function setActivationFee(uint256)','function setRewardPerMinute(uint256)','function withdrawBNB()'
+];
+const VAULT_ABI=[
+'function frnToken() view returns (address)','function miningFee() view returns (uint256)','function boosterPrice() view returns (uint256)','function totalAccruedUnclaimed() view returns (uint256)','function owner() view returns (address)','function startMining() payable','function buyBooster() payable','function claimReward()','function getPendingReward(address) view returns (uint256)','function getMiningInfo(address) view returns (bool,uint256,uint256,bool,uint256,uint256)','function setMiningFee(uint256)','function setBoosterPrice(uint256)','function depositFRN(uint256)','function withdrawFees(uint256,address)'
+];
+const TOKEN_ABI=['function balanceOf(address) view returns (uint256)','function decimals() view returns (uint8)','function symbol() view returns (string)','function approve(address,uint256) returns (bool)','function allowance(address,address) view returns (uint256)','function transferFrom(address,address,uint256) returns (bool)'];
+const ABI=()=>VAULT_ABI;
+function tokenContract(address, signerOrProvider=provider){return new ethers.Contract(address,TOKEN_ABI,signerOrProvider)};
+let wallet=null,externalAddress=null,externalSigner=null,selectedEvmProvider=null,pendingAction='create',contractOwnerAddress=null;
+const $=id=>document.getElementById(id);
+let provider=new ethers.JsonRpcProvider(activeNetwork.rpc,activeNetwork.chainId,{staticNetwork:true});
+let contract=new ethers.Contract(CONTRACT,ABI(),provider);
+const discoveredEvmWallets=new Map();
+$('contractAddress').textContent=CONTRACT;
+function updateNetworkUI(){activeNetwork=NETWORKS[activeNetworkKey];$('networkName').textContent=activeNetwork.name;const feeLabel=$('ownerFeeLabel');if(feeLabel)feeLabel.textContent='Activation Fee ('+activeNetwork.feeSymbol+')';$('networkChainLabel').textContent=activeNetwork.label;$('explorerLink').href=activeNetwork.explorer+'address/'+CONTRACT;$('explorerLink').textContent='View on '+(activeNetworkKey==='bnb'?'BscScan':'Sepolia Etherscan')+' ↗';$('switchBnbBtn').classList.toggle('gold',activeNetworkKey==='bnb');$('switchSepoliaBtn').classList.toggle('gold',activeNetworkKey==='sepolia');$('contractAddress').textContent=CONTRACT;}
+function rebuildNetworkProvider(){activeNetwork=NETWORKS[activeNetworkKey];CONTRACT=CONTRACTS[activeNetworkKey];provider=new ethers.JsonRpcProvider(activeNetwork.rpc,activeNetwork.chainId,{staticNetwork:true});contract=new ethers.Contract(CONTRACT,ABI(),provider);contractOwnerAddress=null;updateNetworkUI();}
+updateNetworkUI();
+
+let toastTimer=null;
+function showToast(message,type='info',txHash=null){
+ const el=$('appToast'); if(!el)return;
+ el.className=''; el.classList.add(type);
+ el.replaceChildren(document.createTextNode(message));
+ if(txHash){el.appendChild(document.createTextNode(' '));const link=document.createElement('a');link.href=activeNetwork.explorer+'tx/'+txHash;link.target='_blank';link.rel='noopener noreferrer';link.textContent='View transaction';el.appendChild(link);}
+ el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),9000);
+}
+
+function askInteraction({title='Confirm',message='',input=false,placeholder='',acceptText='Continue',cancelText='Cancel',defaultValue=''}){return new Promise(resolve=>{const d=$('appInteractionDialog'),field=$('interactionInput'),ok=$('interactionAccept'),cancel=$('interactionCancel');$('interactionTitle').textContent=title;$('interactionMessage').textContent=message;field.classList.toggle('hidden',!input);field.value=defaultValue;field.placeholder=placeholder;ok.textContent=acceptText;cancel.textContent=cancelText;const finish=value=>{d.close();ok.removeEventListener('click',onOk);cancel.removeEventListener('click',onCancel);d.removeEventListener('cancel',onEscape);resolve(value)};const onOk=()=>finish(input?field.value:true);const onCancel=()=>finish(input?null:false);const onEscape=e=>{e.preventDefault();onCancel()};ok.addEventListener('click',onOk);cancel.addEventListener('click',onCancel);d.addEventListener('cancel',onEscape);d.showModal();if(input)field.focus();});}
+function getErrorMessage(error, fallback='Something went wrong'){
+ const code=error?.code ?? error?.info?.error?.code ?? error?.cause?.code;
+ const message=String(error?.shortMessage || error?.reason || error?.message || '');
+ if(code===4001 || code==='ACTION_REJECTED' || /user rejected|user denied|rejected by user|request rejected/i.test(message)) return 'Request was rejected in your wallet. No transaction was submitted.';
+ if(/insufficient funds|insufficient balance|funds for gas/i.test(message)) return 'Insufficient '+activeNetwork.feeSymbol+' balance. Please add enough '+activeNetwork.feeSymbol+' to cover the activation fee and network gas fee.';
+ if(/belum aktif|not active/i.test(message)) return 'Mining is not active yet. Start mining before claiming rewards.';
+ if(/missing revert data|call exception|execution reverted/i.test(message)) return 'Transaction could not be completed. Check your mining status, BNB balance, and contract requirements, then try again.';
+ if(/network|chain/i.test(message) && /switch|wrong|unsupported|mismatch/i.test(message)) return 'Please switch your wallet to '+activeNetwork.name+' (Chain ID '+activeNetwork.chainId+').';
+ return fallback + ': ' + (message || 'Please try again.');
+}
+
+function getKeystore(){try{return localStorage.getItem(STORE_KEY)}catch(e){return null}}
+function getActiveAddress(){return wallet?wallet.address:externalAddress}
+async function ensureSelectedNetwork(p){
+ const n=activeNetwork;
+ try{await p.request({method:'wallet_switchEthereumChain',params:[{chainId:n.hex}]})}
+ catch(e){if(e.code===4902){await p.request({method:'wallet_addEthereumChain',params:[{chainId:n.hex,chainName:n.chainName,nativeCurrency:n.currency,rpcUrls:[n.rpc],blockExplorerUrls:[n.explorer]}]});await p.request({method:'wallet_switchEthereumChain',params:[{chainId:n.hex}]})}else{throw e}}
+}
+async function switchNetwork(key){
+ if(!NETWORKS[key])return;const old=activeNetworkKey;activeNetworkKey=key;activeNetwork=NETWORKS[key];
+ try{if(selectedEvmProvider)await ensureSelectedNetwork(selectedEvmProvider);localStorage.setItem('freon_active_network',key);rebuildNetworkProvider();if(wallet){/* local wallet signs against the selected read/write RPC */}if(externalAddress&&selectedEvmProvider){const bp=new ethers.BrowserProvider(selectedEvmProvider);externalSigner=await bp.getSigner();} $('networkSwitchStatus').textContent='Connected to '+activeNetwork.name+'.';showToast('Network switched to '+activeNetwork.name+'.','success');await refreshData();}
+ catch(e){activeNetworkKey=old;rebuildNetworkProvider();$('networkSwitchStatus').textContent='Could not switch network. '+getErrorMessage(e,'Please try again.');showToast(getErrorMessage(e,'Network switch failed'),'error');}
+}
+$('switchBnbBtn').addEventListener('click',()=>switchNetwork('bnb'));$('switchSepoliaBtn').addEventListener('click',()=>switchNetwork('sepolia'));
+function discoverEvmWallets(){
+ if(window.__freonWalletDiscoveryStarted)return;
+ window.__freonWalletDiscoveryStarted=true;
+ window.addEventListener('eip6963:announceProvider',e=>{
+  const d=e.detail;if(!d?.provider||!d?.info)return;
+  const key=d.info.uuid||d.info.rdns||d.info.name;
+  if(!key||discoveredEvmWallets.has(key))return;
+  discoveredEvmWallets.set(key,{provider:d.provider,info:d.info});renderDiscoveredWallets();
+ });
+ window.dispatchEvent(new Event('eip6963:requestProvider'));
+ const injected=window.ethereum;
+ if(injected){
+  const list=Array.isArray(injected.providers)?injected.providers:[injected];
+  list.forEach((p,i)=>{
+   if(!p||typeof p.request!=='function')return;
+   const key='injected-'+i;
+   if(discoveredEvmWallets.has(key))return;
+   let name='EVM Wallet '+(i+1);
+   if(p.isMetaMask)name='MetaMask';
+   else if(p.isTrust)name='Trust Wallet';
+   else if(p.isCoinbaseWallet)name='Coinbase Wallet';
+   else if(p.isRabby)name='Rabby Wallet';
+   else if(p.isBitKeep||p.isBitget)name='Bitget Wallet';
+   else if(p.isOKXWallet)name='OKX Wallet';
+   discoveredEvmWallets.set(key,{provider:p,info:{uuid:key,name}});
+  });
+ }
+ renderDiscoveredWallets();
+}
+function renderDiscoveredWallets(){
+ const count=$('walletCount');if(count)count.textContent=discoveredEvmWallets.size+' found';
+}
+function getInjectedFallback(){
+ return window.ethereum||window.bitkeep?.ethereum||window.BinanceChain||window.okxwallet||null;
+}
+async function connectInjectedWallet(preferredProvider=null){
+ try{
+  discoverEvmWallets();
+  let p=preferredProvider;
+  if(!p){
+   const list=[...discoveredEvmWallets.values()];
+   if(list.length===1)p=list[0].provider;
+   else if(list.length>1){
+    const answer=await askInteraction({title:'Select a Wallet',message:list.map((x,i)=>(i+1)+'. '+x.info.name).join('\n'),input:true,placeholder:'Enter wallet number',acceptText:'Select'});
+    if(answer===null)return;
+    const index=Number(answer)-1;
+    if(!Number.isInteger(index)||index<0||index>=list.length){showToast('Invalid wallet selection.');return}
+    p=list[index].provider;
+   }else p=getInjectedFallback();
+  }
+  if(!p||typeof p.request!=='function'){
+   showToast('No EVM provider found. Open this page in a wallet browser or use WalletConnect.');
+   return;
+  }
+  const accounts=await p.request({method:'eth_requestAccounts'});
+  if(!accounts?.length)throw new Error('No wallet account was selected.');
+  await ensureSelectedNetwork(p);
+  const bp=new ethers.BrowserProvider(p);
+  const signer=await bp.getSigner();
+  wallet=null;externalSigner=signer;externalAddress=await signer.getAddress();selectedEvmProvider=p;
+  $('connectWalletModal').close();updateUI();await refreshData();
+  if(p.on){
+   p.on('accountsChanged',async accounts=>{
+    if(selectedEvmProvider!==p)return;
+    externalAddress=accounts?.[0]||null;
+    externalSigner=null;
+    if(externalAddress){try{externalSigner=await new ethers.BrowserProvider(p).getSigner()}catch(err){console.warn(err)}}
+    updateUI();refreshData();
+   });
+   p.on('chainChanged',()=>refreshData());
+  }
+ }catch(e){console.error(e);showToast(getErrorMessage(e, 'Wallet connection failed'))}
+}
+async function connectWithWalletConnect(){
+ if($('connectWalletModal').open)$('connectWalletModal').close();
+ try{
+  if(!WALLETCONNECT_PROJECT_ID||WALLETCONNECT_PROJECT_ID==='PASTE_REOWN_PROJECT_ID_HERE'){
+   showToast('WalletConnect is not configured. Check the Reown Project ID and make sure this site uses HTTPS. Never enter your recovery phrase or private key.');
+   return;
+  }
+  if(!walletConnectProvider){
+   const mod=await import('https://esm.sh/@walletconnect/ethereum-provider@2.17.0');
+   const EthereumProvider=mod.default;
+   walletConnectProvider=await EthereumProvider.init({
+    projectId:WALLETCONNECT_PROJECT_ID,
+    chains:[activeNetwork.chainId],
+    optionalChains:[56,11155111],
+    showQrModal:true,
+    methods:['eth_sendTransaction','eth_signTransaction','eth_sign','personal_sign','eth_signTypedData','eth_signTypedData_v4'],
+    events:['chainChanged','accountsChanged'],
+    metadata:{name:'FREON MINING',description:'FRN token and mining dashboard',url:window.location.origin,icons:[]}
+   });
+  }
+  await walletConnectProvider.connect();
+  await ensureSelectedNetwork(walletConnectProvider);
+  const accounts=await walletConnectProvider.request({method:'eth_accounts'});
+  if(!accounts?.length)throw new Error('The wallet did not provide an account. Please try connecting again.');
+  const bp=new ethers.BrowserProvider(walletConnectProvider);
+  externalSigner=await bp.getSigner();externalAddress=await externalSigner.getAddress();
+  wallet=null;selectedEvmProvider=walletConnectProvider;
+  $('connectWalletModal').close();updateUI();await refreshData();
+  walletConnectProvider.on('accountsChanged',async accounts=>{
+   if(selectedEvmProvider!==walletConnectProvider)return;
+   externalAddress=accounts?.[0]||null;externalSigner=null;
+   if(externalAddress){try{externalSigner=await new ethers.BrowserProvider(walletConnectProvider).getSigner()}catch(e){console.warn(e)}}
+   updateUI();refreshData();
+  });
+  walletConnectProvider.on('chainChanged',()=>refreshData());
+ }catch(e){console.error(e);showToast(getErrorMessage(e, 'Wallet connection failed')+'\nCheck the WalletConnect project configuration, HTTPS connection, and BNB Smart Chain support.');}
+}
+function openAppDeepLink(type){
+ if($('connectWalletModal').open)$('connectWalletModal').close();
+ const url=window.location.href,host=window.location.host,path=window.location.pathname;
+ const links={
+  bitget:'https://bkcode.vip?action=dapp&url='+encodeURIComponent(url),
+  trust:'https://link.trustwallet.com/open_url?coin_id=20000714&url='+encodeURIComponent(url),
+  okx:'okx://wallet/dapp/url?dappUrl='+encodeURIComponent(url)
+ };
+ const p=getInjectedFallback();
+ if(p){connectInjectedWallet(p);return}
+ if(type==='other'){connectInjectedWallet();return}
+ window.location.href=links[type]||url;
+}
+$('connectExtBtn').addEventListener('click',()=>{$('connectWalletModal').showModal();discoverEvmWallets()});
+$('closeModalBtn').addEventListener('click',()=>$('connectWalletModal').close());
+$('helpModalBtn').addEventListener('click',()=>showToast('Connect with WalletConnect. Select the matching network (BNB Smart Chain or Sepolia) before signing transactions. This website must use HTTPS.'));
+$('optWalletConnect').addEventListener('click',connectWithWalletConnect);
+function getWriteContract(){
+ if(wallet)return new ethers.Contract(CONTRACT,ABI(),wallet.connect(provider));
+ if(externalSigner)return new ethers.Contract(CONTRACT,ABI(),externalSigner);
+ return null;
+}
+async function checkOwnerStatus(){
+ const a=getActiveAddress();
+ $('vaultOwnerControls').classList.remove('hidden');
+ if(!a){$('ownerPanel').classList.add('hidden');return}
+ try {
+   const [owner, fee, price] = await Promise.all([contract.owner(), contract.miningFee(), contract.boosterPrice()]);
+   contractOwnerAddress=owner;
+   const isOwner=a.toLowerCase()===owner.toLowerCase();
+   $('ownerPanel').classList.toggle('hidden',!isOwner);
+   if(isOwner){
+     $('vaultMiningFeeInput').value=ethers.formatEther(fee);
+     $('vaultBoosterPriceInput').value=ethers.formatEther(price);
+   }
+ } catch(e) {
+   $('ownerPanel').classList.add('hidden');
+   console.warn('Owner status check failed',e);
+ }
+}
+function updateUI(){
+ const exists=!!getKeystore(),a=getActiveAddress();
+ $('walletPanel').classList.toggle('hidden',!a);$('welcome').classList.toggle('hidden',!!a);
+ $('settingsState').textContent=exists?(wallet?'Local wallet is unlocked.':'An encrypted wallet is saved in this browser.'):'No local wallet is saved in this browser.';
+ $('unlockBtn').disabled=!exists||!!wallet;$('backupBtn').disabled=!wallet;$('deleteBtn').disabled=!exists;
+ if(a){$('walletStatus').textContent=wallet?'Unlocked (Local)':'Connected (External Wallet)';$('walletAddress').textContent=a}
+ checkOwnerStatus();
+}
+function fmt(v,d=4){try{return Number(ethers.formatUnits(v,18)).toLocaleString(undefined,{maximumFractionDigits:d})}catch(e){return '—'}}
+function formatToken(v,max=9){try{return Number(ethers.formatUnits(v,18)).toLocaleString(undefined,{maximumFractionDigits:max,minimumFractionDigits:0})}catch(e){return '—'}}
+async function loadDistributionHistory(){
+ const status=$('distributionHistoryStatus'),list=$('distributionHistoryList');
+ if(!status||!list)return;
+ status.textContent='Loading on-chain distribution history…';
+ const knownSepoliaTx='0x61be357eb80bb70aaa7e25ad1dfac75cb8c95b7cd0a38d0ad2605db5106f2d99';
+ const rpcUrls=[activeNetwork.rpc,...(activeNetwork.fallbackRpcs||[])];
+ let logs=[],lastError=null,successfulRpc=false;
+ // Try more than one public RPC; providers can rate-limit eth_getLogs independently.
+ for(const rpcUrl of rpcUrls){
+  try{
+   const readProvider=rpcUrl===activeNetwork.rpc?provider:new ethers.JsonRpcProvider(rpcUrl,activeNetwork.chainId,{staticNetwork:true});
+   const readContract=new ethers.Contract(CONTRACT,ABI(),readProvider);
+   const latest=await readProvider.getBlockNumber();
+   const fromBlock=Math.max(0,latest-100000),chunkSize=500;
+   const filter=readContract.filters.RewardDistributed();
+   const candidate=[];
+   for(let start=fromBlock;start<=latest;start+=chunkSize){
+    const end=Math.min(latest,start+chunkSize-1);
+    candidate.push(...await readContract.queryFilter(filter,start,end));
+   }
+   logs=candidate;successfulRpc=true;break;
+  }catch(e){lastError=e;console.warn('Distribution history RPC failed:',rpcUrl,e);}
+ }
+ // If a provider rejects historical log scans, retrieve the known successful Sepolia receipt as a useful fallback.
+ if((!successfulRpc||logs.length===0)&&activeNetworkKey==='sepolia'){
+  for(const rpcUrl of rpcUrls){
+   try{
+    const readProvider=rpcUrl===activeNetwork.rpc?provider:new ethers.JsonRpcProvider(rpcUrl,activeNetwork.chainId,{staticNetwork:true});
+    const receipt=await readProvider.getTransactionReceipt(knownSepoliaTx);
+    if(!receipt)continue;
+    const parsed=[];
+    for(const raw of receipt.logs){
+     if(raw.address.toLowerCase()!==CONTRACT.toLowerCase())continue;
+     try{const event=contract.interface.parseLog({topics:raw.topics,data:raw.data});if(event&&event.name==='RewardDistributed')parsed.push({args:event.args,transactionHash:receipt.hash,blockNumber:receipt.blockNumber,index:raw.index??raw.logIndex??0});}catch(_){ }
+    }
+    if(parsed.length){logs=parsed;successfulRpc=true;break;}
+   }catch(e){lastError=e;}
+  }
+ }
+ if(!successfulRpc){
+  status.textContent='Could not read distribution history from the available '+activeNetwork.name+' RPC providers. The contract may still be working; retry later.';
+  list.replaceChildren();console.warn('Distribution history:',lastError);return;
+ }
+ logs.sort((a,b)=>a.blockNumber-b.blockNumber||a.index-b.index);
+ const recent=logs.slice(-15).reverse();
+ if(!recent.length){status.textContent='No RewardDistributed events found in the last 100,000 blocks on '+activeNetwork.name+'.';list.replaceChildren();return;}
+ list.innerHTML=recent.map(log=>{
+  const args=log.args||[];
+  const minutes=args.minutesPassed??args[0]??0n;
+  const amount=args.totalMinted??args[1]??0n;
+  const timestamp=Number(args.time??args[2]??0n);
+  const date=timestamp?new Date(timestamp*1000).toLocaleString():'Time unavailable';
+  const hash=log.transactionHash;
+  const shortHash=hash.slice(0,10)+'…'+hash.slice(-8);
+  const txUrl=activeNetwork.explorer+'tx/'+hash;
+  return `<div class="card" style="padding:14px;border-radius:12px"><div class="row" style="align-items:flex-start"><div style="min-width:0"><div class="label">Distribution time</div><div style="font-weight:750;margin:5px 0 10px">${date}</div><div class="label">Amount distributed</div><div style="font-weight:850;font-size:20px;margin:5px 0">${formatToken(amount,9)} FRN</div><div class="small">Minutes passed: ${String(minutes)}</div><div class="label" style="margin-top:10px">Transaction Hash</div><a class="address" href="${txUrl}" target="_blank" rel="noopener noreferrer">${shortHash} ↗</a></div><div style="flex:0 0 auto"><a class="btn secondary" href="${txUrl}" target="_blank" rel="noopener noreferrer">View TX</a></div></div></div>`;
+ }).join('');
+ status.textContent=`Showing ${recent.length} latest on-chain distribution event(s) on ${activeNetwork.name}.`;
+}
+async function loadNetworkMetrics(){
+ $('rewardRateValue').textContent='1 FRN/day';
+ const out=$('totalMinersValue');
+ out.textContent='Loading…';
+ try {
+   // The vault contract has no totalMiners() counter. Count unique MiningStarted
+   // event users from chain logs instead; RPCs may limit historical log queries.
+   const iface = new ethers.Interface(['event MiningStarted(address indexed user,uint256 timestamp)']);
+   const topic = iface.getEvent('MiningStarted').topicHash;
+   const latest = await provider.getBlockNumber();
+   const chunkSize = 2000;
+   const users = new Set();
+   for (let from=0; from<=latest; from+=chunkSize) {
+     const to=Math.min(latest, from+chunkSize-1);
+     const logs=await provider.getLogs({address:CONTRACT, topics:[topic], fromBlock:from, toBlock:to});
+     for (const log of logs) {
+       try { const parsed=iface.parseLog(log); users.add(String(parsed.args.user).toLowerCase()); } catch (_) {}
+     }
+   }
+   out.textContent=String(users.size);
+ } catch(e) {
+   out.textContent='Unavailable';
+   out.title='The contract does not expose totalMiners(); this value is estimated by scanning MiningStarted events. The RPC may limit historical log queries. '+(e?.message||'');
+   console.warn('Total miners log scan failed',e);
+ }
+}
+async function refreshData(){
+ try{
+  const a=getActiveAddress();
+  const [fee,boosterPrice,tokenAddress]=await Promise.all([contract.miningFee(),contract.boosterPrice(),contract.frnToken()]);
+  const token=tokenContract(tokenAddress,provider);
+  const [symbol,decimals,vaultBal]=await Promise.all([token.symbol().catch(()=>'FRN'),token.decimals().catch(()=>18),token.balanceOf(CONTRACT)]);
+  const dec=Number(decimals);
+  const fmtToken=v=>Number(ethers.formatUnits(v,dec)).toLocaleString(undefined,{maximumFractionDigits:6});
+  $('activationFee').textContent=ethers.formatEther(fee)+' '+activeNetwork.feeSymbol;
+  $('remainingSupply').textContent=fmtToken(vaultBal)+' '+symbol;
+  $('vaultAccounting').textContent='Vault balance: '+fmtToken(vaultBal)+' '+symbol+' · Recorded unpaid rewards: '+fmtToken(await contract.totalAccruedUnclaimed())+' '+symbol+' · Booster price: '+ethers.formatEther(boosterPrice)+' '+activeNetwork.feeSymbol;
+  if(a){
+   const [bal,pending,info]=await Promise.all([token.balanceOf(a),contract.getPendingReward(a),contract.getMiningInfo(a)]);
+   $('tokenBalance').textContent=fmtToken(bal)+' '+symbol;
+   $('pendingReward').textContent=fmtToken(pending)+' '+symbol;
+   $('estimatedReward').textContent=fmtToken(pending)+' '+symbol;
+   const active=Boolean(info[0]),boosterEnd=Number(info[2]),boosterActive=Boolean(info[3]),currentRate=info[5];
+   $('miningStatus').textContent=active?'Active':'Not active';
+   $('myMiningRate').textContent=formatToken(currentRate,4)+' FRN/day';
+   $('miningInfo').textContent=boosterActive?'Booster active until '+new Date(boosterEnd*1000).toLocaleString():'Basic rate; no active booster';
+   $('startMiningBtn').disabled=active;$('startMiningBtn').textContent=active?'Mining Already Started':'Start Mining';
+   $('buyBoosterBtn').disabled=!active;
+   $('boosterInfo').textContent=(boosterActive?'Booster active until '+new Date(boosterEnd*1000).toLocaleString()+' · '+formatToken(currentRate,4)+' FRN/day':'Booster inactive · base rate 1 FRN/day')+' · Booster price: '+ethers.formatEther(boosterPrice)+' '+activeNetwork.feeSymbol+'.';
+  }else{
+   $('tokenBalance').textContent='—';$('pendingReward').textContent='—';$('estimatedReward').textContent='—';$('miningStatus').textContent='Wallet not connected';$('myMiningRate').textContent='—';$('miningInfo').textContent='Connect wallet to check status.';$('startMiningBtn').disabled=false;$('startMiningBtn').textContent='Start Mining';$('buyBoosterBtn').disabled=true;$('boosterInfo').textContent='Connect wallet to view booster status.';
+  }
+  await loadNetworkMetrics();$('lastUpdated').textContent='Last updated: '+new Date().toLocaleTimeString();checkOwnerStatus();
+ }catch(e){$('lastUpdated').textContent='Could not load vault data. Verify network, contract address, and that the new vault is deployed.';console.error('Refresh data:',e)}
+}
+async function runTx(method,args=[],opts={}){
+ if(!getActiveAddress()){showToast('Please connect a wallet first.');return}
+ try{
+  if(selectedEvmProvider)await ensureSelectedNetwork(selectedEvmProvider);
+  const c=getWriteContract();if(!c)throw new Error('Wallet signer is unavailable. Please reconnect your wallet.');
+  const tx=await c[method](...args,...(Object.keys(opts).length?[opts]:[]));
+  showToast('Transaction submitted. Waiting for blockchain confirmation…','info',tx.hash);await tx.wait();showToast('Transaction confirmed successfully.','success',tx.hash);await refreshData();
+ }catch(e){showToast(getErrorMessage(e, 'Transaction failed'),'error')}
+}
+$('startMiningBtn').addEventListener('click',async()=>{try{const a=getActiveAddress();if(!a)return showToast('Please connect a wallet first.');const info=await contract.getMiningInfo(a);if(Boolean(info[0]))return showToast('Mining has already been started for this wallet.');const fee=await contract.miningFee();await runTx('startMining',[],{value:fee});}catch(e){showToast(getErrorMessage(e,'Failed to start mining'),'error')}});
+$('buyBoosterBtn').addEventListener('click',async()=>{try{const a=getActiveAddress();if(!a)return showToast('Please connect a wallet first.','error');if(selectedEvmProvider)await ensureSelectedNetwork(selectedEvmProvider);const info=await contract.getMiningInfo(a);if(!Boolean(info[0]))return showToast('Start mining first; booster can only be purchased by an active miner.','error');const price=await contract.boosterPrice();const signer=wallet?wallet.connect(provider):externalSigner;if(!signer)throw new Error('Wallet signer unavailable. Reconnect wallet.');const signerAddress=await signer.getAddress();if(signerAddress.toLowerCase()!==a.toLowerCase())throw new Error('Connected signer does not match the active wallet. Reconnect wallet.');const balance=await provider.getBalance(a);if(balance<price)throw new Error('Insufficient '+activeNetwork.feeSymbol+' balance to buy the booster and pay gas.');const writable=new ethers.Contract(CONTRACT,VAULT_ABI,signer);try{await writable.buyBooster.staticCall({value:price});}catch(simErr){throw new Error('Booster purchase pre-check failed: '+getErrorMessage(simErr,'The contract rejected the purchase. Check mining activation, booster price, and contract ABI.'));}const ok=await askInteraction({title:'Buy 60-Day Booster',message:'Price: '+ethers.formatEther(price)+' '+activeNetwork.feeSymbol+'. This extends the booster by 60 days and sets your total rate to 2.2 FRN/day.',acceptText:'Buy Booster'});if(!ok)return;await runTx('buyBooster',[],{value:price});}catch(e){showToast(getErrorMessage(e,'Failed to buy booster'),'error')}});
+$('claimRewardBtn').addEventListener('click',async()=>{try{const a=getActiveAddress();if(!a)return showToast('Please connect a wallet first.');const pending=await contract.getPendingReward(a);if(pending===0n)return showToast('There are no rewards available to claim yet.');await runTx('claimReward')}catch(e){showToast(getErrorMessage(e,'Failed to claim reward'),'error')}});
+$('vaultSetMiningFeeBtn').addEventListener('click',async()=>{try{
+ const v=$('vaultMiningFeeInput').value;
+ if(v===''||!Number.isFinite(Number(v))||Number(v)<0)throw new Error('Masukkan biaya aktivasi yang valid.');
+ const c=getWriteContract();if(!c)throw new Error('Hubungkan wallet owner terlebih dahulu.');
+ const owner=await contract.owner();if(owner.toLowerCase()!==getActiveAddress().toLowerCase())throw new Error('Wallet yang terhubung bukan owner kontrak.');
+ await c.setMiningFee.staticCall(ethers.parseEther(v));
+ await runTx('setMiningFee',[ethers.parseEther(v)]);
+}catch(e){showToast(getErrorMessage(e,'Gagal mengubah biaya mining'),'error')}});
+$('vaultSetBoosterPriceBtn').addEventListener('click',async()=>{try{
+ const v=$('vaultBoosterPriceInput').value;
+ if(v===''||!Number.isFinite(Number(v))||Number(v)<0)throw new Error('Masukkan harga booster yang valid.');
+ const c=getWriteContract();if(!c)throw new Error('Hubungkan wallet owner terlebih dahulu.');
+ const owner=await contract.owner();if(owner.toLowerCase()!==getActiveAddress().toLowerCase())throw new Error('Wallet yang terhubung bukan owner kontrak.');
+ await c.setBoosterPrice.staticCall(ethers.parseEther(v));
+ await runTx('setBoosterPrice',[ethers.parseEther(v)]);
+}catch(e){showToast(getErrorMessage(e,'Gagal mengubah harga booster'),'error')}});
+$('vaultDepositBtn').addEventListener('click',async()=>{try{const raw=$('vaultDepositInput').value;if(!raw||Number(raw)<=0)return showToast('Enter a valid FRN amount.');const addr=await contract.frnToken();const tokenRead=tokenContract(addr,provider);const dec=Number(await tokenRead.decimals());const amount=ethers.parseUnits(raw,dec);const signer=wallet?wallet.connect(provider):externalSigner;if(!signer)throw new Error('Wallet signer is unavailable.');const token=tokenContract(addr,signer);const allowance=await token.allowance(getActiveAddress(),CONTRACT);if(allowance<amount){const tx=await token.approve(CONTRACT,amount);showToast('Approve submitted; waiting for confirmation…','info',tx.hash);await tx.wait();}await runTx('depositFRN',[amount]);}catch(e){showToast(getErrorMessage(e,'Failed to deposit FRN'),'error')}});
+$('vaultFeesBtn').addEventListener('click',async()=>{try{const raw=$('vaultFeesInput').value;if(!raw||Number(raw)<=0)return showToast('Enter a valid amount.');if(await askInteraction({title:'Withdraw Fees',message:'Withdraw '+raw+' '+activeNetwork.feeSymbol+' in collected fees to the connected owner wallet?',acceptText:'Withdraw'}))await runTx('withdrawFees',[ethers.parseEther(raw),getActiveAddress()]);}catch(e){showToast(getErrorMessage(e,'Failed to withdraw fees'),'error')}});
+function openPassword(action){
+ pendingAction=action;$('passwordInput').value='';$('passwordConfirm').value='';
+ const creating=action==='create';$('dialogTitle').textContent=creating?'Create a Wallet':'Confirm Wallet Password';
+ $('dialogDescription').textContent=creating?'Set a password to encrypt the new wallet in this browser.':'Enter your wallet password to continue.';
+ $('passwordConfirm').classList.toggle('hidden',!creating);$('passwordDialog').showModal();
+}
+$('createBtn').addEventListener('click',()=>{if(getKeystore()){showToast('A wallet is already saved. Open Settings.');return}openPassword('create')});
+$('confirmDialog').addEventListener('click',async()=>{
+ const action=pendingAction,pass=$('passwordInput').value,confirmPass=$('passwordConfirm').value;
+ if(pass.length<10){showToast('Password must be at least 10 characters long.');return}
+ if(action==='create'&&pass!==confirmPass){showToast('Passwords do not match.');return}
+ $('confirmDialog').disabled=true;
+ try{
+  if(action==='create'){
+   if(getKeystore())throw new Error('A wallet is already saved.');
+   const fresh=ethers.Wallet.createRandom(),encrypted=await fresh.encrypt(pass);
+   localStorage.setItem(STORE_KEY,encrypted);wallet=fresh;externalAddress=null;externalSigner=null;selectedEvmProvider=null;
+   $('passwordDialog').close();updateUI();await refreshData();showToast('Local wallet created and encrypted. Store your backup securely.');
+  }else if(action==='unlock'){
+   const encrypted=getKeystore();if(!encrypted)throw new Error('Wallet not found.');
+   wallet=await ethers.Wallet.fromEncryptedJson(encrypted,pass);externalAddress=null;externalSigner=null;selectedEvmProvider=null;
+   $('passwordDialog').close();$('backupOutput').classList.add('hidden');updateUI();await refreshData();
+  }else if(action==='backup'){
+   $('passwordDialog').close();$('privateKeyOutput').value=wallet.privateKey;$('backupOutput').classList.remove('hidden');
+  }else if(action==='delete'){
+   const encrypted=getKeystore();if(!encrypted)throw new Error('Wallet not found.');
+   await ethers.Wallet.fromEncryptedJson(encrypted,pass);
+   if((await askInteraction({title:'Delete Local Wallet',message:'Type DELETE to remove this local wallet from this browser.',input:true,placeholder:'Type DELETE',acceptText:'Delete'}))==='DELETE'){
+    localStorage.removeItem(STORE_KEY);wallet=null;$('backupOutput').classList.add('hidden');$('settingsDialog').close();updateUI();showToast('Local wallet removed. Your blockchain assets have not been deleted.')
+   }
+  }
+ }catch(e){showToast(getErrorMessage(e, 'Operation failed'))}finally{$('confirmDialog').disabled=false}
+});
+$('cancelDialog').addEventListener('click',()=>$('passwordDialog').close());
+$('settingsBtn').addEventListener('click',()=>{$('backupOutput').classList.add('hidden');$('settingsDialog').showModal();updateUI()});
+$('closeSettings').addEventListener('click',()=>$('settingsDialog').close());
+$('unlockBtn').addEventListener('click',()=>{if(getKeystore())openPassword('unlock')});
+$('backupBtn').addEventListener('click',()=>{if(wallet)openPassword('backup')});
+$('deleteBtn').addEventListener('click',async()=>{if(getKeystore()&&await askInteraction({title:'Remove Local Wallet',message:'Remove the encrypted wallet from this browser? Make sure you have a backup.',acceptText:'Continue'}))openPassword('delete')});
+$('lockBtn').addEventListener('click',()=>{wallet=null;externalAddress=null;externalSigner=null;selectedEvmProvider=null;$('backupOutput').classList.add('hidden');updateUI();refreshData()});
+$('copyKeyBtn').addEventListener('click',async()=>{try{await navigator.clipboard.writeText($('privateKeyOutput').value);showToast('Private key copied. Never share it with anyone.')}catch(e){$('privateKeyOutput').select();showToast('Copy it manually only on a trusted device.')}});
+if(window.ethereum?.on){
+ window.ethereum.on('accountsChanged',accounts=>{if(selectedEvmProvider!==window.ethereum)return;externalAddress=accounts?.[0]||null;externalSigner=null;updateUI();refreshData()});
+ window.ethereum.on('chainChanged',()=>refreshData());
+}
+window.addEventListener('beforeunload',()=>{wallet=null;externalAddress=null;externalSigner=null});
+discoverEvmWallets();updateUI();refreshData();setInterval(()=>window.location.reload(),300000);
+})();
+</script>
+</body>
+</html>
